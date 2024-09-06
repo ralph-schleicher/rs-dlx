@@ -1,4 +1,4 @@
-## GNUmakefile --- make file for the Sudoku solver
+## GNUmakefile --- make file for RS-DLX
 
 # Copyright (C) 2024 Ralph Schleicher
 
@@ -34,14 +34,10 @@
 ## Code:
 
 PACKAGE := rs-dlx
-VERSION := $(shell head -1 VERSION)
+VERSION := $(shell head -n1 VERSION)
 TARNAME := $(PACKAGE)-$(VERSION)
 
 ### Rules
-
-%: %.in
-	sed -e 's/@PACKAGE@/$(PACKAGE)/g' \
-	    -e 's/@VERSION@/$(VERSION)/g' $< > $@~ && mv -f $@~ $@
 
 .PHONY: all
 all:
@@ -49,6 +45,7 @@ all:
 .PHONY: check
 check: all
 	quicklisp-check-build -sbcl -ccl $(PACKAGE)
+	sbcl --non-interactive --eval '(asdf:test-system "$(PACKAGE)")'
 
 .PHONY: clean
 clean:
