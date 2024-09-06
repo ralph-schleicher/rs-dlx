@@ -1,0 +1,38 @@
+* RS-DLX
+
+A Common Lisp implementation of [[https://en.wikipedia.org/wiki/Knuth%27s_Algorithm_X][Knuth's Algorithm X]] using the
+[[https://en.wikipedia.org/wiki/Dancing_Links][dancing links]] technique.
+
+Knuth's example from the “[[https://arxiv.org/abs/cs/0011047][Dancing Links]]” paper.
+#+BEGIN_EXAMPLE lisp
+;; Define the incidence matrix.
+(setf a (matrix-from-array #2A((0 0 1 0 1 1 0)
+                               (1 0 0 1 0 0 1)
+                               (0 1 1 0 0 1 0)
+                               (1 0 0 1 0 0 0)
+                               (0 1 0 0 0 0 1)
+                               (0 0 0 1 1 0 1))))
+ ⇒ #<ROOT (6 7)>
+
+(setf (column-names a) '(A B C D E F G))
+ ⇒ (A B C D E F G)
+
+;; Find a solution.
+(setf s (first (solve a)))
+ ⇒ (0 3 4)
+
+;; Print the result.
+(progn
+  (format t "Found a solution containing~%")
+  (dolist (i s)
+    (format t " ~:R row with columns ~S~%"
+            (1+ i) (map-matrix-row #'column-name a i))))
+ ⇒ nil
+#+END_EXAMPLE
+The terminal output is displayed below.
+#+BEGIN_EXAMPLE
+Found a solution containing
+ first row with columns (C E F)
+ fourth row with columns (A D)
+ fifth row with columns (B G)
+#+END_EXAMPLE

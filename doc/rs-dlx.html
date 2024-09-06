@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta charset="utf-8"/>
+  <title>RS-DLX</title>
+  <style type="text/css">
+   *{margin:0;border:0;padding:0}
+   body{color:#000;background-color:#fff;font-family:sans-serif;padding:1em;min-width:46em}
+   a{color:inherit;background-color:transparent;text-decoration:none}
+   table{border-collapse:collapse}
+   div.title{padding:1em}
+   div.subtitle{padding:1em}
+   div.prologue{padding:1em}
+   div.epilogue{padding:1em}
+   span.category{color:#212121;font-style:italic}
+   span.package,span.symbol{color:#212121;font-weight:700;white-space:nowrap}
+   span.lambda-list{color:#616161}
+   span.lambda-list-keyword{color:#388E3C;white-space:nowrap}
+   span.keyword{color:#212121;white-space:nowrap}
+   span.variable{color:#212121;font-style:italic;white-space:nowrap}
+   span.init-form{white-space:nowrap}
+   span.method-specializers{color:#616161}
+   span.method-specializer{color:#212121;white-space:nowrap}
+   span.method-qualifier{color:#212121;white-space:nowrap}
+   span.error{color:#f57c00}
+   div.contents{padding:1em}
+   div.contents-listing{padding:1em}
+   div.contents-listing ul{list-style-type:none}
+   @media all and (min-width:68em){div.contents-listing{column-count:2;column-gap:2em}}
+   div.definition{padding:1em}
+   div.signature{background-color:#F5F5F5;padding:1ex 1em}
+   table.signature td.symbol{text-align:left;vertical-align:baseline;white-space:nowrap;padding-right:.5em}
+   table.signature td.lambda-list{text-align:left;vertical-align:baseline;width:100%}
+   table.signature td.category{text-align:right;vertical-align:baseline;white-space:nowrap;padding-left:1.5em}
+   div.documentation{padding:1em}
+  </style>
+ </head>
+ <body>
+  <div class="title">
+   <h1>RS-DLX</h1>
+  </div>
+  <div class="prologue">
+   <pre>Knuth's Algorithm X using the dancing links technique.
+
+The algorithm itself is executed by the ‘<a href="#skm8kelh"><span class="symbol">solve</span></a>’ function.  The
+remaining functions manage the incidence matrix, i.e. the sparse
+matrix data structure based on circular doubly linked lists as
+described in Knuth's “Dancing Links” paper.
+
+Donald E. Knuth: “Dancing Links”, ‹https://arxiv.org/abs/cs/0011047›.</pre>
+  </div>
+  <div class="contents" id="contents">
+   <h2>Contents</h2>
+   <div class="contents-listing">
+    <ul>
+     <li>
+      <a href="#othfhcx7">
+       <span class="category">Function</span>
+       <span class="symbol">add-matrix-column</span>
+      </a>
+     </li>
+     <li>
+      <a href="#z8zhvkod">
+       <span class="category">Function</span>
+       <span class="symbol">add-matrix-row</span>
+      </a>
+     </li>
+     <li>
+      <a href="#gqcx8nvp">
+       <span class="category">Function</span>
+       <span class="symbol">array-from-matrix</span>
+      </a>
+     </li>
+     <li>
+      <a href="#yw3tf8gw">
+       <span class="category">Function</span>
+       <span class="symbol">column-index</span>
+      </a>
+     </li>
+     <li>
+      <a href="#khr5maax">
+       <span class="category">Accessor&nbsp;Function</span>
+       <span class="symbol">column-name</span>
+      </a>
+     </li>
+     <li>
+      <a href="#zbt7pfnv">
+       <span class="category">Function</span>
+       <span class="symbol">(setf&nbsp;column-names)</span>
+      </a>
+     </li>
+     <li>
+      <a href="#b2dc4ffy">
+       <span class="category">Function</span>
+       <span class="symbol">make-matrix</span>
+      </a>
+     </li>
+     <li>
+      <a href="#qqmajaxa">
+       <span class="category">Function</span>
+       <span class="symbol">map-matrix-column</span>
+      </a>
+     </li>
+     <li>
+      <a href="#dc8vkgv4">
+       <span class="category">Function</span>
+       <span class="symbol">map-matrix-row</span>
+      </a>
+     </li>
+     <li>
+      <a href="#lrfmm88x">
+       <span class="category">Function</span>
+       <span class="symbol">matrix-columns</span>
+      </a>
+     </li>
+     <li>
+      <a href="#mlkw8xbk">
+       <span class="category">Accessor&nbsp;Function</span>
+       <span class="symbol">matrix-element</span>
+      </a>
+     </li>
+     <li>
+      <a href="#kdnfiub7">
+       <span class="category">Function</span>
+       <span class="symbol">(setf&nbsp;matrix-elements)</span>
+      </a>
+     </li>
+     <li>
+      <a href="#vf834kqr">
+       <span class="category">Function</span>
+       <span class="symbol">matrix-from-array</span>
+      </a>
+     </li>
+     <li>
+      <a href="#mhowjuaf">
+       <span class="category">Function</span>
+       <span class="symbol">matrix-rows</span>
+      </a>
+     </li>
+     <li>
+      <a href="#hy4e2o3p">
+       <span class="category">Function</span>
+       <span class="symbol">remove-matrix-column</span>
+      </a>
+     </li>
+     <li>
+      <a href="#bic4qmbx">
+       <span class="category">Function</span>
+       <span class="symbol">remove-matrix-column-by-name</span>
+      </a>
+     </li>
+     <li>
+      <a href="#ssgeyjqx">
+       <span class="category">Function</span>
+       <span class="symbol">remove-matrix-columns</span>
+      </a>
+     </li>
+     <li>
+      <a href="#e2ppmoy7">
+       <span class="category">Function</span>
+       <span class="symbol">remove-matrix-columns-by-name</span>
+      </a>
+     </li>
+     <li>
+      <a href="#bl4l3dby">
+       <span class="category">Function</span>
+       <span class="symbol">remove-matrix-row</span>
+      </a>
+     </li>
+     <li>
+      <a href="#zfxjsoaz">
+       <span class="category">Function</span>
+       <span class="symbol">remove-matrix-row-by-name</span>
+      </a>
+     </li>
+     <li>
+      <a href="#ickr2mab">
+       <span class="category">Function</span>
+       <span class="symbol">remove-matrix-rows</span>
+      </a>
+     </li>
+     <li>
+      <a href="#eoali5a7">
+       <span class="category">Function</span>
+       <span class="symbol">remove-matrix-rows-by-name</span>
+      </a>
+     </li>
+     <li>
+      <a href="#daxi4fyv">
+       <span class="category">Function</span>
+       <span class="symbol">row-index</span>
+      </a>
+     </li>
+     <li>
+      <a href="#js5alwrn">
+       <span class="category">Accessor&nbsp;Function</span>
+       <span class="symbol">row-name</span>
+      </a>
+     </li>
+     <li>
+      <a href="#bnhagihu">
+       <span class="category">Function</span>
+       <span class="symbol">(setf&nbsp;row-names)</span>
+      </a>
+     </li>
+     <li>
+      <a href="#skm8kelh">
+       <span class="category">Function</span>
+       <span class="symbol">solve</span>
+      </a>
+     </li>
+    </ul>
+   </div>
+  </div>
+  <div class="dictionary">
+   <div class="definition" id="othfhcx7">
+    <div class="signature">
+     <table class="signature">
+      <colgroup>
+       <col />
+       <col />
+       <col />
+      </colgroup>
+      <tbody>
+       <tr>
+	<td class="symbol"><a href="#contents"><span class="symbol">add-matrix-column</span></a></td>
+	<td class="lambda-list"><span class="lambda-list">(<span class="variable">matrix</span> <span class="variable">elements</span> <span class="lambda-list-keyword">&amp;key</span> <span class="variable">name</span> <span class="variable">initial-element</span>)</span></td>
+	<td class="category"><span class="category">Function</span></td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
+    <div class="documentation">
+     <pre>Add a column vector at the end of a matrix.
+
+First argument MATRIX is a matrix object.
+Second argument ELEMENTS specifies the matrix elements.  Value has
+ to be a list with elements of the form ‘(INDEX . VALUE)’ or just
+ ‘INDEX’ where INDEX and VALUE is the row index and value of a
+ matrix element.  For a plain ‘INDEX’, a value of one is used.
+ The matrix elements have to be supplied in strictly monotonically
+ increasing order of the row index.
+Keyword argument NAME is the symbolic identifier of the new matrix
+ column.
+
+Value is the matrix object.  If an error occurs, the structure of
+the original matrix is retained.
+
+See also ‘<a href="#b2dc4ffy"><span class="symbol">make-matrix</span></a>’, ‘<a href="#mlkw8xbk"><span class="symbol">matrix-element</span></a>’, and ‘<a href="#z8zhvkod"><span class="symbol">add-matrix-row</span></a>’.
+
+Exceptional Situations:
+
+   * Signals an error of type ‘program-error’ if the matrix
+     elements are not specified in strictly monotonically
+     increasing order of the row indices or if a row index
+     is out of bounds.
+
+Examples:
+
+(array-from-matrix
+ (add-matrix-column (add-matrix-column (make-matrix 5 0) '(1 2 4)) '(0 3)))
+ ⇒ #2A((0 1) (1 0) (1 0) (0 1) (1 0))</pre>
+    </div>
+   </div>
+   <div class="definition" id="z8zhvkod">
+    <div class="signature">
+     <table class="signature">
+      <colgroup>
+       <col />
+       <col />
+       <col />
+      </colgroup>
+      <tbody>
+       <tr>
+	<td class="symbol"><a href="#contents"><span class="symbol">add-matrix-row</span></a></td>
+	<td class="lambda-list"><span class="lambda-list">(<span class="variable">matrix</span> <span class="variable">elements</span> <span class="lambda-list-keyword">&amp;key</span> <span class="variable">name</span> <span class="variable">initial-element</span>)</span></td>
+	<td class="category"><span class="category">Function</span></td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
+    <div class="documentation">
+     <pre>Add a row vector at the end of a matrix.
+
+First argument MATRIX is a matrix object.
+Second argument ELEMENTS specifies the matrix elements.  Value has
+ to be a list with elements of the form ‘(INDEX . VALUE)’ or just
+ ‘INDEX’ where INDEX and VALUE is the column index and value of a
+ matrix element.  For a plain ‘INDEX’, a value of one is used.
+ The matrix elements have to be supplied in strictly monotonically
+ increasing order of the column index.
+Keyword argument NAME is the symbolic identifier of the new matrix
+ row.
+
+Value is the matrix object.  If an error occurs, the structure of
+the original matrix is retained.
+
+See also ‘<a href="#b2dc4ffy"><span class="symbol">make-matrix</span></a>’, ‘<a href="#mlkw8xbk"><span class="symbol">matrix-element</span></a>’, and ‘<a href="#othfhcx7"><span class="symbol">add-matrix-column</span></a>’.
+
+Exceptional Situations:
+
+   * Signals an error of type ‘program-error’ if the matrix
+     elements are not specified in strictly monotonically
+     increasing order of the column indices or if a column
+     index is out of bounds.
+
+Examples:
+
+(array-from-matrix
+ (add-matrix-row (add-matrix-row (make-matrix 0 5) '(1 2 4)) '(0 3)))
+ ⇒ #2A((0 1 1 0 1) (1 0 0 1 0))</pre>
+    </div>
+   </div>
+   <div class="definition" id="gqcx8nvp">
+    <div class="signature">
+     <table class="signature">
+      <colgroup>
+       <col />
+       <col />
+       <col />
+      </colgroup>
+      <tbody>
+       <tr>
+	<td class="symbol"><a href="#contents"><span class="symbol">array-from-matrix</span></a></td>
+	<td class="lambda-list"><span class="lambda-list">(<span class="variable">matrix</span> <span class="lambda-list-keyword">&amp;key</span> <span class="variable">element-type</span>)</span></td>
+	<td class="category"><span class="category">Function</span></td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
+    <div class="documentation">
+     <pre>Convert a matrix object into an array.
+
+Argument MATRIX is a matrix object.
+Keyword argument ELEMENT-TYPE specifies the type of the values
+ intended to be stored in the array elements.  Value is a type
+ specifier.  Default is the element type of the matrix object.
+
+Value is an array with two dimensions.
+
+See also ‘<a href="#vf834kqr"><span class="symbol">matrix-from-array</span></a>’ and ‘<a href="#b2dc4ffy"><span class="symbol">make-matrix</span></a>’.
+
+Exceptional Situations:
+
+   * The consequences are undefined if ELEMENT-TYPE is not
+     a valid type specifier.</pre>
+    </div>
+   </div>
+   <div class="definition" id="yw3tf8gw">
+    <div class="signature">
+     <table class="signature">
+      <colgroup>
+       <col />
+       <col />
+       <col />
+      </colgroup>
+      <tbody>
+       <tr>
+	<td class="symbol"><a href="#contents"><span class="symbol">column-index</span></a></td>
+	<td class="lambda-list"><span class="lambda-list">(<span class="variable">object</span>)</span></td>
+	<td class="category"><span class="category">Function</span></td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
+    <div class="documentation">
+     <pre>Return the index of a matrix column.
+
+Argument OBJECT can be a matrix element or a column header.
+
+Value is the zero-based column index.</pre>
+    </div>
+   </div>
+   <div class="definition" id="khr5maax">
+    <div class="signature">
+     <table class="signature">
+      <colgroup>
+       <col />
+       <col />
+       <col />
+      </colgroup>
+      <tbody>
+       <tr>
+	<td class="symbol"><a href="#contents"><span class="symbol">column-name</span></a></td>
+	<td class="lambda-list"><span class="lambda-list">(<span class="variable">object</span> <span class="lambda-list-keyword">&amp;optional</span> <span class="variable">index</span>)</span></td>
+	<td class="category"><span class="category">Accessor&nbsp;Function</span></td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
+    <div class="documentation">
+     <pre>Read or update the symbolic identifier of a matrix column.
+
+First argument OBJECT can be a matrix, a column header, or a matrix
+ element.
+Optional second argument INDEX is the column index.  This argument is
+ only required if OBJECT is a matrix.
+
+Value is the symbolic identifier of the matrix column.
+
+Exceptional Situations:
+
+   * Signals an error of type ‘program-error’ if INDEX is out
+     out bounds.</pre>
+    </div>
+   </div>
+   <div class="definition" id="zbt7pfnv">
+    <div class="signature">
+     <table class="signature">
+      <colgroup>
+       <col />
+       <col />
+       <col />
+      </colgroup>
+      <tbody>
+       <tr>
+	<td class="symbol"><a href="#contents"><span class="symbol">(setf&nbsp;column-names)</span></a></td>
+	<td class="lambda-list"><span class="lambda-list">(<span class="variable">matrix</span>)</span></td>
+	<td class="category"><span class="category">Function</span></td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
+    <div class="documentation">
+     <pre>Update the symbolic identifiers of the matrix columns.
+
+Argument MATRIX is a matrix object.
+
+Value is a list of column names.  Not more than the total number of
+matrix columns are updated.  If the list is shorter, the names of the
+remaining matrix columns are set to ‘nil’.</pre>
+    </div>
+   </div>
+   <div class="definition" id="b2dc4ffy">
+    <div class="signature">
+     <table class="signature">
+      <colgroup>
+       <col />
+       <col />
+       <col />
+      </colgroup>
+      <tbody>
+       <tr>
+	<td class="symbol"><a href="#contents"><span class="symbol">make-matrix</span></a></td>
+	<td class="lambda-list"><span class="lambda-list">(<span class="variable">rows</span> <span class="variable">columns</span> <span class="lambda-list-keyword">&amp;key</span> <span class="variable">element-type</span> <span class="variable">null-element</span>)</span></td>
+	<td class="category"><span class="category">Function</span></td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
+    <div class="documentation">
+     <pre>Create a new matrix object.
+
+A matrix object is a sparse matrix based on circular doubly linked
+lists as described in Knuth's “Dancing Links” paper.  The matrix
+elements are addressed by a zero-based row and column index.  Any
+index has to be a valid array index.  All matrix elements are set
+to the null element initially.  You can read or update a matrix
+element with the ‘<a href="#mlkw8xbk"><span class="symbol">matrix-element</span></a>’ function.  A more efficient way
+to fill a matrix is to create an empty matrix with either zero
+rows or zero columns, then use the ‘<a href="#z8zhvkod"><span class="symbol">add-matrix-row</span></a>’ function or
+‘<a href="#othfhcx7"><span class="symbol">add-matrix-column</span></a>’ function respectively to define the non-null
+elements.
+
+First argument ROWS is the number of matrix rows.  Value has to
+ be a non-negative integer.
+Second argument COLUMNS is the number of matrix columns.  Value
+ has to be a non-negative integer.
+Keyword argument ELEMENT-TYPE specifies the type of the values
+ intended to be stored in the matrix elements.  Value is a type
+ specifier.  Default is ‘bit’.
+Keyword argument NULL-ELEMENT is the value of a null element.
+ Value has to be either the number zero or ‘nil’.  Default is
+ the number zero if ELEMENT-TYPE specifies a numeric type.
+ Otherwise, the default is ‘nil’.
+
+Value is a matrix object.
+
+See also ‘<a href="#mhowjuaf"><span class="symbol">matrix-rows</span></a>’, ‘<a href="#lrfmm88x"><span class="symbol">matrix-columns</span></a>’, ‘<a href="#mlkw8xbk"><span class="symbol">matrix-element</span></a>’,
+‘<a href="#kdnfiub7"><span class="symbol">matrix-elements</span></a>’, ‘<a href="#z8zhvkod"><span class="symbol">add-matrix-row</span></a>’, ‘<a href="#othfhcx7"><span class="symbol">add-matrix-column</span></a>’,
+‘<a href="#vf834kqr"><span class="symbol">matrix-from-array</span></a>’, and ‘<a href="#gqcx8nvp"><span class="symbol">array-from-matrix</span></a>’.
+
+Exceptional Situations:
+
+   * The consequences are undefined if ELEMENT-TYPE is not
+     a valid type specifier.
+
+Examples:
+
+;; Create a logical matrix with elements in {0, 1}.
+(array-from-matrix (make-matrix 3 4))
+ ⇒ #2A((0 0 0 0) (0 0 0 0) (0 0 0 0))
+
+;; Create a logical matrix of generalized Boolean values.
+(array-from-matrix (make-matrix 3 4 :element-type t))
+ ⇒ #2A((NIL NIL NIL NIL) (NIL NIL NIL NIL) (NIL NIL NIL NIL))</pre>
+    </div>
+   </div>
+   <div class="definition" id="qqmajaxa">
+    <div class="signature">
+     <table class="signature">
+      <colgroup>
+       <col />
+       <col />
+       <col />
+      </colgroup>
+      <tbody>
+       <tr>
+	<td class="symbol"><a href="#contents"><span class="symbol">map-matrix-column</span></a></td>
+	<td class="lambda-list"><span class="lambda-list">(<span class="variable">function</span> <span class="variable">matrix</span> <span class="variable">index</span>)</span></td>
+	<td class="category"><span class="category">Function</span></td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
+    <div class="documentation">
+     <pre>Apply a function to every non-null element in a matrix column.
+
+First argument FUNCTION is the function to be applied.
+Second argument MATRIX is the matrix object.
+Third argument INDEX is the column index.
+
+The function is called with one argument, the matrix element.
+Candidates for the FUNCTION argument are, e.g. ‘<a href="#daxi4fyv"><span class="symbol">row-index</span></a>’ or
+‘<a href="#js5alwrn"><span class="symbol">row-name</span></a>’.
+
+Value is a list containing the results returned by FUNCTION.
+
+See also ‘<a href="#dc8vkgv4"><span class="symbol">map-matrix-row</span></a>’.
+
+Exceptional Situations:
+
+   * Signals an error of type ‘program-error’ if INDEX is out
+     of bounds.</pre>
+    </div>
+   </div>
+   <div class="definition" id="dc8vkgv4">
+    <div class="signature">
+     <table class="signature">
+      <colgroup>
+       <col />
+       <col />
+       <col />
+      </colgroup>
+      <tbody>
+       <tr>
+	<td class="symbol"><a href="#contents"><span class="symbol">map-matrix-row</span></a></td>
+	<td class="lambda-list"><span class="lambda-list">(<span class="variable">function</span> <span class="variable">matrix</span> <span class="variable">index</span>)</span></td>
+	<td class="category"><span class="category">Function</span></td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
+    <div class="documentation">
+     <pre>Apply a function to every non-null element in a matrix row.
+
+First argument FUNCTION is the function to be applied.
+Second argument MATRIX is the matrix object.
+Third argument INDEX is the row index.
+
+The function is called with one argument, the matrix element.
+Candidates for the FUNCTION argument are, e.g. ‘<a href="#yw3tf8gw"><span class="symbol">column-index</span></a>’
+or ‘<a href="#khr5maax"><span class="symbol">column-name</span></a>’.
+
+Value is a list containing the results returned by FUNCTION.
+
+See also ‘<a href="#qqmajaxa"><span class="symbol">map-matrix-column</span></a>’.
+
+Exceptional Situations:
+
+   * Signals an error of type ‘program-error’ if INDEX is out
+     of bounds.</pre>
+    </div>
+   </div>
+   <div class="definition" id="lrfmm88x">
+    <div class="signature">
+     <table class="signature">
+      <colgroup>
+       <col />
+       <col />
+       <col />
+      </colgroup>
+      <tbody>
+       <tr>
+	<td class="symbol"><a href="#contents"><span class="symbol">matrix-columns</span></a></td>
+	<td class="lambda-list"><span class="lambda-list">(<span class="variable">matrix</span>)</span></td>
+	<td class="category"><span class="category">Function</span></td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
+    <div class="documentation">
+     <pre>Return the number of matrix columns.
+
+Argument MATRIX is a matrix object.
+
+Value is the number of matrix columns.</pre>
+    </div>
+   </div>
+   <div class="definition" id="mlkw8xbk">
+    <div class="signature">
+     <table class="signature">
+      <colgroup>
+       <col />
+       <col />
+       <col />
+      </colgroup>
+      <tbody>
+       <tr>
+	<td class="symbol"><a href="#contents"><span class="symbol">matrix-element</span></a></td>
+	<td class="lambda-list"><span class="lambda-list">(<span class="variable">matrix</span> <span class="variable">row-index</span> <span class="variable">column-index</span>)</span></td>
+	<td class="category"><span class="category">Accessor&nbsp;Function</span></td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
+    <div class="documentation">
+     <pre>Read or update the value of a matrix element.
+
+First argument MATRIX is a matrix object.
+Second argument ROW-INDEX is the row index of the matrix element.
+Third argument COLUMN-INDEX is the column index of the matrix element.
+
+Value is the value of the referenced matrix element.
+
+Exceptional Situations:
+
+   * Signals an error of type ‘program-error’ if ROW-INDEX or
+     COLUMN-INDEX is out of bounds.
+
+   * Signals an error of type ‘type-error’ if the new value is
+     not compatible with the matrix element type.</pre>
+    </div>
+   </div>
+   <div class="definition" id="kdnfiub7">
+    <div class="signature">
+     <table class="signature">
+      <colgroup>
+       <col />
+       <col />
+       <col />
+      </colgroup>
+      <tbody>
+       <tr>
+	<td class="symbol"><a href="#contents"><span class="symbol">(setf&nbsp;matrix-elements)</span></a></td>
+	<td class="lambda-list"><span class="lambda-list">(<span class="variable">matrix</span> <span class="lambda-list-keyword">&amp;optional</span> <span class="variable">start-row</span> <span class="variable">start-column</span>)</span></td>
+	<td class="category"><span class="category">Function</span></td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
+    <div class="documentation">
+     <pre>Update multiple elements of a matrix.
+
+First argument MATRIX is a matrix object.
+Optional second argument START-ROW is the row index of the first
+ matrix element.  Default is zero.
+Optional third argument START-COLUMN is the column index of the
+ first matrix element.  Default is zero.
+
+Value is a two-dimensional array whose elements will be assigned
+to the block starting at START-ROW and START-COLUMN.
+
+Exceptional Situations:
+
+   * Signals an error of type ‘program-error’ if START-ROW or
+     START-COLUMN is out of bounds or if the dimensions of the
+     new value relative to START-ROW and START-COLUMN exceed
+     the matrix dimensions.
+
+   * Signals an error of type ‘type-error’ if the array element
+     type of the new value is not a subtype of the matrix element
+     type.</pre>
+    </div>
+   </div>
+   <div class="definition" id="vf834kqr">
+    <div class="signature">
+     <table class="signature">
+      <colgroup>
+       <col />
+       <col />
+       <col />
+      </colgroup>
+      <tbody>
+       <tr>
+	<td class="symbol"><a href="#contents"><span class="symbol">matrix-from-array</span></a></td>
+	<td class="lambda-list"><span class="lambda-list">(<span class="variable">array</span> <span class="lambda-list-keyword">&amp;key</span> <span class="variable">element-type</span> <span class="variable">null-element</span>)</span></td>
+	<td class="category"><span class="category">Function</span></td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
+    <div class="documentation">
+     <pre>Convert an array into a matrix object.
+
+Argument ARRAY is an array with two dimensions.
+Keyword argument ELEMENT-TYPE specifies the type of the values
+ intended to be stored in the matrix elements.  Value is a type
+ specifier.  Default is ‘bit’.
+Keyword argument NULL-ELEMENT defines the value of a null element.
+ Default is the number zero if ELEMENT-TYPE specifies a numeric
+ type.  Otherwise, the default is ‘nil’.
+
+Value is a matrix object.
+
+See also ‘<a href="#gqcx8nvp"><span class="symbol">array-from-matrix</span></a>’ and ‘<a href="#b2dc4ffy"><span class="symbol">make-matrix</span></a>’.
+
+Exceptional Situations:
+
+   * The consequences are undefined if ELEMENT-TYPE is not
+     a valid type specifier.</pre>
+    </div>
+   </div>
+   <div class="definition" id="mhowjuaf">
+    <div class="signature">
+     <table class="signature">
+      <colgroup>
+       <col />
+       <col />
+       <col />
+      </colgroup>
+      <tbody>
+       <tr>
+	<td class="symbol"><a href="#contents"><span class="symbol">matrix-rows</span></a></td>
+	<td class="lambda-list"><span class="lambda-list">(<span class="variable">matrix</span>)</span></td>
+	<td class="category"><span class="category">Function</span></td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
+    <div class="documentation">
+     <pre>Return the number of matrix rows.
+
+Argument MATRIX is a matrix object.
+
+Value is the number of matrix rows.</pre>
+    </div>
+   </div>
+   <div class="definition" id="hy4e2o3p">
+    <div class="signature">
+     <table class="signature">
+      <colgroup>
+       <col />
+       <col />
+       <col />
+      </colgroup>
+      <tbody>
+       <tr>
+	<td class="symbol"><a href="#contents"><span class="symbol">remove-matrix-column</span></a></td>
+	<td class="lambda-list"><span class="lambda-list">(<span class="variable">matrix</span> <span class="variable">index</span>)</span></td>
+	<td class="category"><span class="category">Function</span></td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
+    <div class="documentation">
+     <pre>Remove a matrix column.
+
+First argument MATRIX is a matrix object.
+Second argument INDEX is a column index.
+
+Value is the matrix object.  If an error occurs, the structure of the
+original matrix is retained.
+
+See also ‘<a href="#bic4qmbx"><span class="symbol">remove-matrix-column-by-name</span></a>’ and ‘<a href="#ssgeyjqx"><span class="symbol">remove-matrix-columns</span></a>’.
+
+Exceptional Situations:
+
+   * Signals an error of type ‘program-error’ if INDEX is out of
+     bounds.</pre>
+    </div>
+   </div>
+   <div class="definition" id="bic4qmbx">
+    <div class="signature">
+     <table class="signature">
+      <colgroup>
+       <col />
+       <col />
+       <col />
+      </colgroup>
+      <tbody>
+       <tr>
+	<td class="symbol"><a href="#contents"><span class="symbol">remove-matrix-column-by-name</span></a></td>
+	<td class="lambda-list"><span class="lambda-list">(<span class="variable">matrix</span> <span class="variable">name</span> <span class="lambda-list-keyword">&amp;key</span> <span class="variable">test</span>)</span></td>
+	<td class="category"><span class="category">Function</span></td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
+    <div class="documentation">
+     <pre>Remove a matrix column.
+
+First argument MATRIX is a matrix object.
+Second argument NAME is a column name.  Only the first column name
+ matching NAME will be removed.
+Keyword argument TEST defines the function to compare two column names
+ for equality.  Default is ‘eql’.
+
+Value is the matrix object.  If an error occurs, the structure of the
+original matrix is retained.
+
+See also ‘<a href="#hy4e2o3p"><span class="symbol">remove-matrix-column</span></a>’ and ‘<a href="#e2ppmoy7"><span class="symbol">remove-matrix-columns-by-name</span></a>’.
+
+Exceptional Situations:
+
+   * Signals an error of type ‘program-error’ if no column named
+     NAME exists.</pre>
+    </div>
+   </div>
+   <div class="definition" id="ssgeyjqx">
+    <div class="signature">
+     <table class="signature">
+      <colgroup>
+       <col />
+       <col />
+       <col />
+      </colgroup>
+      <tbody>
+       <tr>
+	<td class="symbol"><a href="#contents"><span class="symbol">remove-matrix-columns</span></a></td>
+	<td class="lambda-list"><span class="lambda-list">(<span class="variable">matrix</span> <span class="variable">indices</span>)</span></td>
+	<td class="category"><span class="category">Function</span></td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
+    <div class="documentation">
+     <pre>Remove some matrix columns.
+
+First argument MATRIX is a matrix object.
+Second argument INDICES is a list of column indices.  No error is
+ signaled if a column index does not exist.
+
+Value is the matrix object.
+
+See also ‘<a href="#e2ppmoy7"><span class="symbol">remove-matrix-columns-by-name</span></a>’ and ‘<a href="#hy4e2o3p"><span class="symbol">remove-matrix-column</span></a>’.</pre>
+    </div>
+   </div>
+   <div class="definition" id="e2ppmoy7">
+    <div class="signature">
+     <table class="signature">
+      <colgroup>
+       <col />
+       <col />
+       <col />
+      </colgroup>
+      <tbody>
+       <tr>
+	<td class="symbol"><a href="#contents"><span class="symbol">remove-matrix-columns-by-name</span></a></td>
+	<td class="lambda-list"><span class="lambda-list">(<span class="variable">matrix</span> <span class="variable">names</span> <span class="lambda-list-keyword">&amp;key</span> <span class="variable">test</span>)</span></td>
+	<td class="category"><span class="category">Function</span></td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
+    <div class="documentation">
+     <pre>Remove some matrix columns.
+
+First argument MATRIX is a matrix object.
+Second argument NAMES is a list of column names.  No error is signaled
+ if a column name does not exist.
+Keyword argument TEST defines the function to compare two column names
+ for equality.  Default is ‘eql’.
+
+Value is the matrix object.
+
+See also ‘<a href="#ssgeyjqx"><span class="symbol">remove-matrix-columns</span></a>’ and ‘<a href="#bic4qmbx"><span class="symbol">remove-matrix-column-by-name</span></a>’.</pre>
+    </div>
+   </div>
+   <div class="definition" id="bl4l3dby">
+    <div class="signature">
+     <table class="signature">
+      <colgroup>
+       <col />
+       <col />
+       <col />
+      </colgroup>
+      <tbody>
+       <tr>
+	<td class="symbol"><a href="#contents"><span class="symbol">remove-matrix-row</span></a></td>
+	<td class="lambda-list"><span class="lambda-list">(<span class="variable">matrix</span> <span class="variable">index</span>)</span></td>
+	<td class="category"><span class="category">Function</span></td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
+    <div class="documentation">
+     <pre>Remove a matrix row.
+
+First argument MATRIX is a matrix object.
+Second argument INDEX is a row index.
+
+Value is the matrix object.  If an error occurs, the structure of the
+original matrix is retained.
+
+See also ‘<a href="#zfxjsoaz"><span class="symbol">remove-matrix-row-by-name</span></a>’ and ‘<a href="#ickr2mab"><span class="symbol">remove-matrix-rows</span></a>’.
+
+Exceptional Situations:
+
+   * Signals an error of type ‘program-error’ if INDEX is out of
+     bounds.</pre>
+    </div>
+   </div>
+   <div class="definition" id="zfxjsoaz">
+    <div class="signature">
+     <table class="signature">
+      <colgroup>
+       <col />
+       <col />
+       <col />
+      </colgroup>
+      <tbody>
+       <tr>
+	<td class="symbol"><a href="#contents"><span class="symbol">remove-matrix-row-by-name</span></a></td>
+	<td class="lambda-list"><span class="lambda-list">(<span class="variable">matrix</span> <span class="variable">name</span> <span class="lambda-list-keyword">&amp;key</span> <span class="variable">test</span>)</span></td>
+	<td class="category"><span class="category">Function</span></td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
+    <div class="documentation">
+     <pre>Remove a matrix row.
+
+First argument MATRIX is a matrix object.
+Second argument NAME is a row name.  Only the first row name matching
+ NAME will be removed.
+Keyword argument TEST defines the function to compare two row names
+ for equality.  Default is ‘eql’.
+
+Value is the matrix object.  If an error occurs, the structure of the
+original matrix is retained.
+
+See also ‘<a href="#bl4l3dby"><span class="symbol">remove-matrix-row</span></a>’ and ‘<a href="#eoali5a7"><span class="symbol">remove-matrix-rows-by-name</span></a>’.
+
+Exceptional Situations:
+
+   * Signals an error of type ‘program-error’ if no row named
+     NAME exists.</pre>
+    </div>
+   </div>
+   <div class="definition" id="ickr2mab">
+    <div class="signature">
+     <table class="signature">
+      <colgroup>
+       <col />
+       <col />
+       <col />
+      </colgroup>
+      <tbody>
+       <tr>
+	<td class="symbol"><a href="#contents"><span class="symbol">remove-matrix-rows</span></a></td>
+	<td class="lambda-list"><span class="lambda-list">(<span class="variable">matrix</span> <span class="variable">indices</span>)</span></td>
+	<td class="category"><span class="category">Function</span></td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
+    <div class="documentation">
+     <pre>Remove some matrix rows.
+
+First argument MATRIX is a matrix object.
+Second argument INDICES is a list of row indices.  No error is
+ signaled if a row index does not exist.
+
+Value is the matrix object.
+
+See also ‘<a href="#eoali5a7"><span class="symbol">remove-matrix-rows-by-name</span></a>’ and ‘<a href="#bl4l3dby"><span class="symbol">remove-matrix-row</span></a>’.</pre>
+    </div>
+   </div>
+   <div class="definition" id="eoali5a7">
+    <div class="signature">
+     <table class="signature">
+      <colgroup>
+       <col />
+       <col />
+       <col />
+      </colgroup>
+      <tbody>
+       <tr>
+	<td class="symbol"><a href="#contents"><span class="symbol">remove-matrix-rows-by-name</span></a></td>
+	<td class="lambda-list"><span class="lambda-list">(<span class="variable">matrix</span> <span class="variable">names</span> <span class="lambda-list-keyword">&amp;key</span> <span class="variable">test</span>)</span></td>
+	<td class="category"><span class="category">Function</span></td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
+    <div class="documentation">
+     <pre>Remove some matrix rows.
+
+First argument MATRIX is a matrix object.
+Second argument NAMES is a list of row names.  No error is signaled
+ if a row name does not exist.
+Keyword argument TEST defines the function to compare two row names
+ for equality.  Default is ‘eql’.
+
+Value is the matrix object.
+
+See also ‘<a href="#ickr2mab"><span class="symbol">remove-matrix-rows</span></a>’ and ‘<a href="#zfxjsoaz"><span class="symbol">remove-matrix-row-by-name</span></a>’.</pre>
+    </div>
+   </div>
+   <div class="definition" id="daxi4fyv">
+    <div class="signature">
+     <table class="signature">
+      <colgroup>
+       <col />
+       <col />
+       <col />
+      </colgroup>
+      <tbody>
+       <tr>
+	<td class="symbol"><a href="#contents"><span class="symbol">row-index</span></a></td>
+	<td class="lambda-list"><span class="lambda-list">(<span class="variable">object</span>)</span></td>
+	<td class="category"><span class="category">Function</span></td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
+    <div class="documentation">
+     <pre>Return the row index of a matrix element.
+
+Argument OBJECT can be a matrix element or a row header.
+
+Value is the zero-based row index.</pre>
+    </div>
+   </div>
+   <div class="definition" id="js5alwrn">
+    <div class="signature">
+     <table class="signature">
+      <colgroup>
+       <col />
+       <col />
+       <col />
+      </colgroup>
+      <tbody>
+       <tr>
+	<td class="symbol"><a href="#contents"><span class="symbol">row-name</span></a></td>
+	<td class="lambda-list"><span class="lambda-list">(<span class="variable">object</span> <span class="lambda-list-keyword">&amp;optional</span> <span class="variable">index</span>)</span></td>
+	<td class="category"><span class="category">Accessor&nbsp;Function</span></td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
+    <div class="documentation">
+     <pre>Read or update the symbolic identifier of a matrix row.
+
+First argument OBJECT can be a matrix, a row header, or a matrix
+ element.
+Optional second argument INDEX is the row index.  This argument is
+ only required if OBJECT is a matrix.
+
+Value is the symbolic identifier of the matrix row.
+
+Exceptional Situations:
+
+   * Signals an error of type ‘program-error’ if INDEX is out
+     out bounds.</pre>
+    </div>
+   </div>
+   <div class="definition" id="bnhagihu">
+    <div class="signature">
+     <table class="signature">
+      <colgroup>
+       <col />
+       <col />
+       <col />
+      </colgroup>
+      <tbody>
+       <tr>
+	<td class="symbol"><a href="#contents"><span class="symbol">(setf&nbsp;row-names)</span></a></td>
+	<td class="lambda-list"><span class="lambda-list">(<span class="variable">matrix</span>)</span></td>
+	<td class="category"><span class="category">Function</span></td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
+    <div class="documentation">
+     <pre>Update the symbolic identifiers of the matrix rows.
+
+Argument MATRIX is a matrix object.
+
+Value is a list of row names.  Not more than the total number of
+matrix rows are updated.  If the list is shorter, the names of the
+remaining matrix rows are set to ‘nil’.</pre>
+    </div>
+   </div>
+   <div class="definition" id="skm8kelh">
+    <div class="signature">
+     <table class="signature">
+      <colgroup>
+       <col />
+       <col />
+       <col />
+      </colgroup>
+      <tbody>
+       <tr>
+	<td class="symbol"><a href="#contents"><span class="symbol">solve</span></a></td>
+	<td class="lambda-list"><span class="lambda-list">(<span class="variable">matrix</span> <span class="lambda-list-keyword">&amp;key</span> <span class="variable">maximum-number-of-solutions</span> <span class="variable">if-does-not-exist</span> <span class="variable">raw</span>)</span></td>
+	<td class="category"><span class="category">Function</span></td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
+    <div class="documentation">
+     <pre>Apply Knuth's Algorithm X to an exact cover problem.
+
+Argument MATRIX is the incident matrix of the exact cover problem
+ where the rows represent the set of choices (a.k.a. possibilities
+ or candidates) and the columns represent the set of constraints.
+ Value is a matrix object.
+Keyword argument MAXIMUM-NUMBER-OF-SOLUTIONS limits the number of
+ solutions to search for.  Value has to be a positive integer.  A
+ value of ‘nil’ means that there is no limit, i.e. search for all
+ solutions.  Default is one.
+Keyword argument IF-DOES-NOT-EXIST specifies the action to be taken
+ if no solution can be found.  A value of ‘:error’ means to signal
+ an error.  A value of ‘nil’ means to return ‘nil’ to indicate
+ failure.  Default is ‘:error’.
+If keyword argument RAW is true, the row indices in a solution are
+ in the order as they have been found.  Otherwise, they are sorted
+ in ascending order.  Default is false.
+
+Return value is the list of found solutions.  Each solution is a
+list of row indices of the incident matrix.
+
+See also ‘<a href="#b2dc4ffy"><span class="symbol">make-matrix</span></a>’.
+
+Exceptional Situations:
+
+   * Signals an error of type ‘arithmetic-error’ if no solution
+     can be found and the argument IF-DOES-NOT-EXIST is ‘:error’.
+
+Examples:
+
+;; Knuth's example from the “Dancing Links” paper.
+(let ((a (matrix-from-array #2A((0 0 1 0 1 1 0)
+                                (1 0 0 1 0 0 1)
+                                (0 1 1 0 0 1 0)
+                                (1 0 0 1 0 0 0)
+                                (0 1 0 0 0 0 1)
+                                (0 0 0 1 1 0 1)))))
+  (setf (column-names a) '(A B C D E F G))
+  (let ((s (first (solve a))))
+    (format t "Found a solution containing~%")
+    (dolist (i s)
+      (format t " ~:R row with columns ~S~%"
+              (1+ i) (map-matrix-row #'column-name a i)))
+    s))
+ ⇒ (0 3 4)
+;; And the terminal output is:
+Found a solution containing
+ first row with columns (C E F)
+ fourth row with columns (A D)
+ fifth row with columns (B G)</pre>
+    </div>
+   </div>
+  </div>
+ </body>
+</html>

@@ -1,0 +1,508 @@
+RS-DLX
+
+Knuth's Algorithm X using the dancing links technique.
+
+The algorithm itself is executed by the ‘solve’ function.  The
+remaining functions manage the incidence matrix, i.e. the sparse
+matrix data structure based on circular doubly linked lists as
+described in Knuth's “Dancing Links” paper.
+
+Donald E. Knuth: “Dancing Links”, ‹https://arxiv.org/abs/cs/0011047›.
+
+                                                                      [Function]
+add-matrix-column (matrix elements &key name initial-element)
+   Add a column vector at the end of a matrix.
+
+   First argument MATRIX is a matrix object.
+   Second argument ELEMENTS specifies the matrix elements.  Value has
+    to be a list with elements of the form ‘(INDEX . VALUE)’ or just
+    ‘INDEX’ where INDEX and VALUE is the row index and value of a
+    matrix element.  For a plain ‘INDEX’, a value of one is used.
+    The matrix elements have to be supplied in strictly monotonically
+    increasing order of the row index.
+   Keyword argument NAME is the symbolic identifier of the new matrix
+    column.
+
+   Value is the matrix object.  If an error occurs, the structure of
+   the original matrix is retained.
+
+   See also ‘make-matrix’, ‘matrix-element’, and ‘add-matrix-row’.
+
+   Exceptional Situations:
+
+      * Signals an error of type ‘program-error’ if the matrix
+        elements are not specified in strictly monotonically
+        increasing order of the row indices or if a row index
+        is out of bounds.
+
+   Examples:
+
+   (array-from-matrix
+    (add-matrix-column (add-matrix-column (make-matrix 5 0) '(1 2 4)) '(0 3)))
+    ⇒ #2A((0 1) (1 0) (1 0) (0 1) (1 0))
+
+                                                                      [Function]
+add-matrix-row (matrix elements &key name initial-element)
+   Add a row vector at the end of a matrix.
+
+   First argument MATRIX is a matrix object.
+   Second argument ELEMENTS specifies the matrix elements.  Value has
+    to be a list with elements of the form ‘(INDEX . VALUE)’ or just
+    ‘INDEX’ where INDEX and VALUE is the column index and value of a
+    matrix element.  For a plain ‘INDEX’, a value of one is used.
+    The matrix elements have to be supplied in strictly monotonically
+    increasing order of the column index.
+   Keyword argument NAME is the symbolic identifier of the new matrix
+    row.
+
+   Value is the matrix object.  If an error occurs, the structure of
+   the original matrix is retained.
+
+   See also ‘make-matrix’, ‘matrix-element’, and ‘add-matrix-column’.
+
+   Exceptional Situations:
+
+      * Signals an error of type ‘program-error’ if the matrix
+        elements are not specified in strictly monotonically
+        increasing order of the column indices or if a column
+        index is out of bounds.
+
+   Examples:
+
+   (array-from-matrix
+    (add-matrix-row (add-matrix-row (make-matrix 0 5) '(1 2 4)) '(0 3)))
+    ⇒ #2A((0 1 1 0 1) (1 0 0 1 0))
+
+                                                                      [Function]
+array-from-matrix (matrix &key element-type)
+   Convert a matrix object into an array.
+
+   Argument MATRIX is a matrix object.
+   Keyword argument ELEMENT-TYPE specifies the type of the values
+    intended to be stored in the array elements.  Value is a type
+    specifier.  Default is the element type of the matrix object.
+
+   Value is an array with two dimensions.
+
+   See also ‘matrix-from-array’ and ‘make-matrix’.
+
+   Exceptional Situations:
+
+      * The consequences are undefined if ELEMENT-TYPE is not
+        a valid type specifier.
+
+                                                                      [Function]
+column-index (object)
+   Return the index of a matrix column.
+
+   Argument OBJECT can be a matrix element or a column header.
+
+   Value is the zero-based column index.
+
+                                                             [Accessor Function]
+column-name (object &optional index)
+   Read or update the symbolic identifier of a matrix column.
+
+   First argument OBJECT can be a matrix, a column header, or a matrix
+    element.
+   Optional second argument INDEX is the column index.  This argument is
+    only required if OBJECT is a matrix.
+
+   Value is the symbolic identifier of the matrix column.
+
+   Exceptional Situations:
+
+      * Signals an error of type ‘program-error’ if INDEX is out
+        out bounds.
+
+                                                                      [Function]
+(setf column-names) (matrix)
+   Update the symbolic identifiers of the matrix columns.
+
+   Argument MATRIX is a matrix object.
+
+   Value is a list of column names.  Not more than the total number of
+   matrix columns are updated.  If the list is shorter, the names of the
+   remaining matrix columns are set to ‘nil’.
+
+                                                                      [Function]
+make-matrix (rows columns &key element-type null-element)
+   Create a new matrix object.
+
+   A matrix object is a sparse matrix based on circular doubly linked
+   lists as described in Knuth's “Dancing Links” paper.  The matrix
+   elements are addressed by a zero-based row and column index.  Any
+   index has to be a valid array index.  All matrix elements are set
+   to the null element initially.  You can read or update a matrix
+   element with the ‘matrix-element’ function.  A more efficient way
+   to fill a matrix is to create an empty matrix with either zero
+   rows or zero columns, then use the ‘add-matrix-row’ function or
+   ‘add-matrix-column’ function respectively to define the non-null
+   elements.
+
+   First argument ROWS is the number of matrix rows.  Value has to
+    be a non-negative integer.
+   Second argument COLUMNS is the number of matrix columns.  Value
+    has to be a non-negative integer.
+   Keyword argument ELEMENT-TYPE specifies the type of the values
+    intended to be stored in the matrix elements.  Value is a type
+    specifier.  Default is ‘bit’.
+   Keyword argument NULL-ELEMENT is the value of a null element.
+    Value has to be either the number zero or ‘nil’.  Default is
+    the number zero if ELEMENT-TYPE specifies a numeric type.
+    Otherwise, the default is ‘nil’.
+
+   Value is a matrix object.
+
+   See also ‘matrix-rows’, ‘matrix-columns’, ‘matrix-element’,
+   ‘matrix-elements’, ‘add-matrix-row’, ‘add-matrix-column’,
+   ‘matrix-from-array’, and ‘array-from-matrix’.
+
+   Exceptional Situations:
+
+      * The consequences are undefined if ELEMENT-TYPE is not
+        a valid type specifier.
+
+   Examples:
+
+   ;; Create a logical matrix with elements in {0, 1}.
+   (array-from-matrix (make-matrix 3 4))
+    ⇒ #2A((0 0 0 0) (0 0 0 0) (0 0 0 0))
+
+   ;; Create a logical matrix of generalized Boolean values.
+   (array-from-matrix (make-matrix 3 4 :element-type t))
+    ⇒ #2A((NIL NIL NIL NIL) (NIL NIL NIL NIL) (NIL NIL NIL NIL))
+
+                                                                      [Function]
+map-matrix-column (function matrix index)
+   Apply a function to every non-null element in a matrix column.
+
+   First argument FUNCTION is the function to be applied.
+   Second argument MATRIX is the matrix object.
+   Third argument INDEX is the column index.
+
+   The function is called with one argument, the matrix element.
+   Candidates for the FUNCTION argument are, e.g. ‘row-index’ or
+   ‘row-name’.
+
+   Value is a list containing the results returned by FUNCTION.
+
+   See also ‘map-matrix-row’.
+
+   Exceptional Situations:
+
+      * Signals an error of type ‘program-error’ if INDEX is out
+        of bounds.
+
+                                                                      [Function]
+map-matrix-row (function matrix index)
+   Apply a function to every non-null element in a matrix row.
+
+   First argument FUNCTION is the function to be applied.
+   Second argument MATRIX is the matrix object.
+   Third argument INDEX is the row index.
+
+   The function is called with one argument, the matrix element.
+   Candidates for the FUNCTION argument are, e.g. ‘column-index’
+   or ‘column-name’.
+
+   Value is a list containing the results returned by FUNCTION.
+
+   See also ‘map-matrix-column’.
+
+   Exceptional Situations:
+
+      * Signals an error of type ‘program-error’ if INDEX is out
+        of bounds.
+
+                                                                      [Function]
+matrix-columns (matrix)
+   Return the number of matrix columns.
+
+   Argument MATRIX is a matrix object.
+
+   Value is the number of matrix columns.
+
+                                                             [Accessor Function]
+matrix-element (matrix row-index column-index)
+   Read or update the value of a matrix element.
+
+   First argument MATRIX is a matrix object.
+   Second argument ROW-INDEX is the row index of the matrix element.
+   Third argument COLUMN-INDEX is the column index of the matrix element.
+
+   Value is the value of the referenced matrix element.
+
+   Exceptional Situations:
+
+      * Signals an error of type ‘program-error’ if ROW-INDEX or
+        COLUMN-INDEX is out of bounds.
+
+      * Signals an error of type ‘type-error’ if the new value is
+        not compatible with the matrix element type.
+
+                                                                      [Function]
+(setf matrix-elements) (matrix &optional start-row start-column)
+   Update multiple elements of a matrix.
+
+   First argument MATRIX is a matrix object.
+   Optional second argument START-ROW is the row index of the first
+    matrix element.  Default is zero.
+   Optional third argument START-COLUMN is the column index of the
+    first matrix element.  Default is zero.
+
+   Value is a two-dimensional array whose elements will be assigned
+   to the block starting at START-ROW and START-COLUMN.
+
+   Exceptional Situations:
+
+      * Signals an error of type ‘program-error’ if START-ROW or
+        START-COLUMN is out of bounds or if the dimensions of the
+        new value relative to START-ROW and START-COLUMN exceed
+        the matrix dimensions.
+
+      * Signals an error of type ‘type-error’ if the array element
+        type of the new value is not a subtype of the matrix element
+        type.
+
+                                                                      [Function]
+matrix-from-array (array &key element-type null-element)
+   Convert an array into a matrix object.
+
+   Argument ARRAY is an array with two dimensions.
+   Keyword argument ELEMENT-TYPE specifies the type of the values
+    intended to be stored in the matrix elements.  Value is a type
+    specifier.  Default is ‘bit’.
+   Keyword argument NULL-ELEMENT defines the value of a null element.
+    Default is the number zero if ELEMENT-TYPE specifies a numeric
+    type.  Otherwise, the default is ‘nil’.
+
+   Value is a matrix object.
+
+   See also ‘array-from-matrix’ and ‘make-matrix’.
+
+   Exceptional Situations:
+
+      * The consequences are undefined if ELEMENT-TYPE is not
+        a valid type specifier.
+
+                                                                      [Function]
+matrix-rows (matrix)
+   Return the number of matrix rows.
+
+   Argument MATRIX is a matrix object.
+
+   Value is the number of matrix rows.
+
+                                                                      [Function]
+remove-matrix-column (matrix index)
+   Remove a matrix column.
+
+   First argument MATRIX is a matrix object.
+   Second argument INDEX is a column index.
+
+   Value is the matrix object.  If an error occurs, the structure of the
+   original matrix is retained.
+
+   See also ‘remove-matrix-column-by-name’ and ‘remove-matrix-columns’.
+
+   Exceptional Situations:
+
+      * Signals an error of type ‘program-error’ if INDEX is out of
+        bounds.
+
+                                                                      [Function]
+remove-matrix-column-by-name (matrix name &key test)
+   Remove a matrix column.
+
+   First argument MATRIX is a matrix object.
+   Second argument NAME is a column name.  Only the first column name
+    matching NAME will be removed.
+   Keyword argument TEST defines the function to compare two column names
+    for equality.  Default is ‘eql’.
+
+   Value is the matrix object.  If an error occurs, the structure of the
+   original matrix is retained.
+
+   See also ‘remove-matrix-column’ and ‘remove-matrix-columns-by-name’.
+
+   Exceptional Situations:
+
+      * Signals an error of type ‘program-error’ if no column named
+        NAME exists.
+
+                                                                      [Function]
+remove-matrix-columns (matrix indices)
+   Remove some matrix columns.
+
+   First argument MATRIX is a matrix object.
+   Second argument INDICES is a list of column indices.  No error is
+    signaled if a column index does not exist.
+
+   Value is the matrix object.
+
+   See also ‘remove-matrix-columns-by-name’ and ‘remove-matrix-column’.
+
+                                                                      [Function]
+remove-matrix-columns-by-name (matrix names &key test)
+   Remove some matrix columns.
+
+   First argument MATRIX is a matrix object.
+   Second argument NAMES is a list of column names.  No error is signaled
+    if a column name does not exist.
+   Keyword argument TEST defines the function to compare two column names
+    for equality.  Default is ‘eql’.
+
+   Value is the matrix object.
+
+   See also ‘remove-matrix-columns’ and ‘remove-matrix-column-by-name’.
+
+                                                                      [Function]
+remove-matrix-row (matrix index)
+   Remove a matrix row.
+
+   First argument MATRIX is a matrix object.
+   Second argument INDEX is a row index.
+
+   Value is the matrix object.  If an error occurs, the structure of the
+   original matrix is retained.
+
+   See also ‘remove-matrix-row-by-name’ and ‘remove-matrix-rows’.
+
+   Exceptional Situations:
+
+      * Signals an error of type ‘program-error’ if INDEX is out of
+        bounds.
+
+                                                                      [Function]
+remove-matrix-row-by-name (matrix name &key test)
+   Remove a matrix row.
+
+   First argument MATRIX is a matrix object.
+   Second argument NAME is a row name.  Only the first row name matching
+    NAME will be removed.
+   Keyword argument TEST defines the function to compare two row names
+    for equality.  Default is ‘eql’.
+
+   Value is the matrix object.  If an error occurs, the structure of the
+   original matrix is retained.
+
+   See also ‘remove-matrix-row’ and ‘remove-matrix-rows-by-name’.
+
+   Exceptional Situations:
+
+      * Signals an error of type ‘program-error’ if no row named
+        NAME exists.
+
+                                                                      [Function]
+remove-matrix-rows (matrix indices)
+   Remove some matrix rows.
+
+   First argument MATRIX is a matrix object.
+   Second argument INDICES is a list of row indices.  No error is
+    signaled if a row index does not exist.
+
+   Value is the matrix object.
+
+   See also ‘remove-matrix-rows-by-name’ and ‘remove-matrix-row’.
+
+                                                                      [Function]
+remove-matrix-rows-by-name (matrix names &key test)
+   Remove some matrix rows.
+
+   First argument MATRIX is a matrix object.
+   Second argument NAMES is a list of row names.  No error is signaled
+    if a row name does not exist.
+   Keyword argument TEST defines the function to compare two row names
+    for equality.  Default is ‘eql’.
+
+   Value is the matrix object.
+
+   See also ‘remove-matrix-rows’ and ‘remove-matrix-row-by-name’.
+
+                                                                      [Function]
+row-index (object)
+   Return the row index of a matrix element.
+
+   Argument OBJECT can be a matrix element or a row header.
+
+   Value is the zero-based row index.
+
+                                                             [Accessor Function]
+row-name (object &optional index)
+   Read or update the symbolic identifier of a matrix row.
+
+   First argument OBJECT can be a matrix, a row header, or a matrix
+    element.
+   Optional second argument INDEX is the row index.  This argument is
+    only required if OBJECT is a matrix.
+
+   Value is the symbolic identifier of the matrix row.
+
+   Exceptional Situations:
+
+      * Signals an error of type ‘program-error’ if INDEX is out
+        out bounds.
+
+                                                                      [Function]
+(setf row-names) (matrix)
+   Update the symbolic identifiers of the matrix rows.
+
+   Argument MATRIX is a matrix object.
+
+   Value is a list of row names.  Not more than the total number of
+   matrix rows are updated.  If the list is shorter, the names of the
+   remaining matrix rows are set to ‘nil’.
+
+                                                                      [Function]
+solve (matrix &key maximum-number-of-solutions if-does-not-exist raw)
+   Apply Knuth's Algorithm X to an exact cover problem.
+
+   Argument MATRIX is the incident matrix of the exact cover problem
+    where the rows represent the set of choices (a.k.a. possibilities
+    or candidates) and the columns represent the set of constraints.
+    Value is a matrix object.
+   Keyword argument MAXIMUM-NUMBER-OF-SOLUTIONS limits the number of
+    solutions to search for.  Value has to be a positive integer.  A
+    value of ‘nil’ means that there is no limit, i.e. search for all
+    solutions.  Default is one.
+   Keyword argument IF-DOES-NOT-EXIST specifies the action to be taken
+    if no solution can be found.  A value of ‘:error’ means to signal
+    an error.  A value of ‘nil’ means to return ‘nil’ to indicate
+    failure.  Default is ‘:error’.
+   If keyword argument RAW is true, the row indices in a solution are
+    in the order as they have been found.  Otherwise, they are sorted
+    in ascending order.  Default is false.
+
+   Return value is the list of found solutions.  Each solution is a
+   list of row indices of the incident matrix.
+
+   See also ‘make-matrix’.
+
+   Exceptional Situations:
+
+      * Signals an error of type ‘arithmetic-error’ if no solution
+        can be found and the argument IF-DOES-NOT-EXIST is ‘:error’.
+
+   Examples:
+
+   ;; Knuth's example from the “Dancing Links” paper.
+   (let ((a (matrix-from-array #2A((0 0 1 0 1 1 0)
+                                   (1 0 0 1 0 0 1)
+                                   (0 1 1 0 0 1 0)
+                                   (1 0 0 1 0 0 0)
+                                   (0 1 0 0 0 0 1)
+                                   (0 0 0 1 1 0 1)))))
+     (setf (column-names a) '(A B C D E F G))
+     (let ((s (first (solve a))))
+       (format t "Found a solution containing~%")
+       (dolist (i s)
+         (format t " ~:R row with columns ~S~%"
+                 (1+ i) (map-matrix-row #'column-name a i)))
+       s))
+    ⇒ (0 3 4)
+   ;; And the terminal output is:
+   Found a solution containing
+    first row with columns (C E F)
+    fourth row with columns (A D)
+    fifth row with columns (B G)
