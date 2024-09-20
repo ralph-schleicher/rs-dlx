@@ -83,15 +83,24 @@
   "The home package for row and column names.")
 
 (defun encode-name (row column number &optional raw)
-  "Encode the name of a possibility."
+  "Encode the name of a possibility.
+
+If optional argument RAW is true, arguments ROW and COLUMN are already
+ one-based row and column indices.
+
+Value is a symbol in the ‘name-package’ package."
   (when (not raw)
-    ;; ROW and COLUMN denote indices.
     (incf row)
     (incf column))
-  (intern (format nil "R~AC~A-~A" row column number) name-package))
+  (intern (format nil "R~AC~AN~A" row column number) name-package))
 
 (defun decode-name (name &optional raw)
   "Decode the name of a possibility.
+
+First argument NAME is a row name as returned by the ‘encode-name’
+ function.
+If optional second argument RAW is true, return the row index and
+ column index as one-based indices.
 
 Return the row index, column index, and number as multiple values."
   (let ((name (symbol-name name)))
@@ -103,55 +112,54 @@ Return the row index, column index, and number as multiple values."
         (decf column))
       (values row column number))))
 
-(alexandria:define-constant board-possibilities
-    (let ((board (make-board)))
-      (iter (for row :from 0 :below 9)
-            (iter (for column :from 0 :below 9)
-                  (setf (aref board row column)
-                        (let ((row (1+ row)) (column (1+ column)))
-                          (iter (for number :from 1 :to 9)
-                                (collect (encode-name row column number t)))))))
-      board)
-    :test #'equalp
-    :documentation "A Sudoku board with all possibilities per cell.")
+(defvar board-possibilities
+  (let ((board (make-board)))
+    (iter (for row :from 0 :below 9)
+          (iter (for column :from 0 :below 9)
+                (setf (aref board row column)
+                      (iter (for number :from 1 :to 9)
+                            (collect (encode-name row column number))))))
+    board)
+  "A Sudoku board with all possibilities per cell.")
 
-(alexandria:define-constant all-possibilities
-    (let (result)
-      (iter (for row :from 1 :to 9)
-            (iter (for column :from 1 :to 9)
-                  (iter (for number :from 1 :to 9)
-                        (push (encode-name row column number t) result))))
-      (nreverse result))
-    :test #'equalp
-    :documentation "A list of all possibilities.")
+(defvar all-possibilities
+  (let (result)
+    (iter (for row :from 1 :to 9)
+          (iter (for column :from 1 :to 9)
+                (iter (for number :from 1 :to 9)
+                      (push (encode-name row column number t) result))))
+    (nreverse result))
+  "A flat list of all possibilities.")
 
 (defvar *sudoku-matrix-elements* ()
   "A list of non-null incidence matrix elements for Sudoku.
-List elements are cons cells of the form ‘(ROW . COLUMN)’
-where ROW and COLUMN are the row index and column index
-of a non-null matrix element.")
+List elements are cons cells of the form ‘(ROW . COLUMNS)’ where ROW
+is a row name and COLUMNS is a list of column indices of all non-null
+matrix elements of this row.")
 
 (defun initialize-sudoku-matrix (a)
   "Fill in the incidence matrix A from scratch.
 Argument A is a 729×324 null matrix."
-  (let ((e (make-array '(9 9)
-             :element-type 'bit
-             :initial-contents '((1 0 0 0 0 0 0 0 0)
-                                 (0 1 0 0 0 0 0 0 0)
-                                 (0 0 1 0 0 0 0 0 0)
-                                 (0 0 0 1 0 0 0 0 0)
-                                 (0 0 0 0 1 0 0 0 0)
-                                 (0 0 0 0 0 1 0 0 0)
-                                 (0 0 0 0 0 0 1 0 0)
-                                 (0 0 0 0 0 0 0 1 0)
-                                 (0 0 0 0 0 0 0 0 1))))
+  (unless (and (= (rs-dlx:matrix-rows a) 729)
+               (= (rs-dlx:matrix-columns a) 324))
+    (error 'program-error))
+  (let ((e (make-array '(9 9) :element-type 'bit
+                              :initial-contents '((1 0 0 0 0 0 0 0 0)
+                                                  (0 1 0 0 0 0 0 0 0)
+                                                  (0 0 1 0 0 0 0 0 0)
+                                                  (0 0 0 1 0 0 0 0 0)
+                                                  (0 0 0 0 1 0 0 0 0)
+                                                  (0 0 0 0 0 1 0 0 0)
+                                                  (0 0 0 0 0 0 1 0 0)
+                                                  (0 0 0 0 0 0 0 1 0)
+                                                  (0 0 0 0 0 0 0 0 1))))
         (i 0)
         (j 0))
     ;; Reset the row names.
     (setf (rs-dlx:row-names a) all-possibilities)
     ;; Cell constraints.  All possible numbers for a cell.
     ;;
-    ;; R1C1 = {R1C1-1, R1C1-2, R1C1-3, R1C1-4, R1C1-5, R1C1-6, R1C1-7, R1C1-8, R1C1-9}
+    ;; R1C1 = {R1C1N1, R1C1N2, R1C1N3, R1C1N4, R1C1N5, R1C1N6, R1C1N7, R1C1N8, R1C1N9}
     (setf i 0)
     (iter (repeat 81)
           (iter (repeat 9)
@@ -160,7 +168,7 @@ Argument A is a 729×324 null matrix."
           (incf j))
     ;; Row constraints.  All possibilities for a number in a row.
     ;;
-    ;; R1-1 = {R1C1-1, R1C2-1, R1C3-1, R1C4-1, R1C5-1, R1C6-1, R1C7-1, R1C8-1, R1C9-1}
+    ;; R1N1 = {R1C1N1, R1C2N1, R1C3N1, R1C4N1, R1C5N1, R1C6N1, R1C7N1, R1C8N1, R1C9N1}
     (setf i 0)
     (iter (repeat 9)
           (iter (repeat 9)
@@ -169,7 +177,7 @@ Argument A is a 729×324 null matrix."
           (incf j 9))
     ;; Column constraints.  All possibilities for a number in a column.
     ;;
-    ;; C1-1 = {R1C1-1, R2C1-1, R3C1-1, R4C1-1, R5C1-1, R6C1-1, R7C1-1, R8C1-1, R9C1-1}
+    ;; C1N1 = {R1C1N1, R2C1N1, R3C1N1, R4C1N1, R5C1N1, R6C1N1, R7C1N1, R8C1N1, R9C1N1}
     (setf i 0)
     (iter (repeat 9)
           (iter (repeat 9)
@@ -181,7 +189,7 @@ Argument A is a 729×324 null matrix."
     ;; Block constraints.  All possibilities for a number in a 3×3 block.
     ;; Blocks are numbered sequentially in row major mode.
     ;;
-    ;; B1-1 = {R1C1-1, R1C2-1, R1C3-1, R2C1-1, R2C2-1, R2C3-1, R3C1-1, R3C2-1, R3C3-1}
+    ;; B1N1 = {R1C1N1, R1C2N1, R1C3N1, R2C1N1, R2C2N1, R2C3N1, R3C1N1, R3C2N1, R3C3N1}
     (setf i 0)
     (iter (repeat 3)
           (iter (repeat 3)
@@ -192,7 +200,8 @@ Argument A is a 729×324 null matrix."
                       (incf j 9))
                 (decf j 27))
           (incf j 27))
-    ()))
+    ;; Return value.
+    a))
 
 (defun make-sudoku-matrix ()
   "Create a new incidence matrix for Sudoku."
@@ -202,8 +211,7 @@ Argument A is a 729×324 null matrix."
         (a nil))
     ;; Constraints.
     (cond ((null *sudoku-matrix-elements*)
-           (setf a (rs-dlx:make-matrix m n))
-           (initialize-sudoku-matrix a)
+           (setf a (initialize-sudoku-matrix (rs-dlx:make-matrix m n)))
            ;; Update cache.
            (iter (for i :from 0 :below m)
                  ;; See call of ‘rs-dlx:add-matrix-row’ below.
@@ -221,7 +229,16 @@ Argument A is a 729×324 null matrix."
     a))
 
 (defun solve (&rest sequences)
-  "Solve a Sudoku puzzle."
+  "Solve a Sudoku puzzle.
+
+Arguments are sequences of numbers in the range from 1 to 9 inclusive
+ or characters in the range from ‘1’ to ‘9’ inclusive.  All sequences
+ are rearranged to a 9×9 matrix in row major layout.  The number 0,
+ the symbol ‘nil’, the space character ‘ ’, and the character
+ ‘.’ (period) represent missing numbers.
+
+Value is a 9×9 array of integers in the range from 1 to 9 inclusive
+which is one possible solution of the Sudoku puzzle."
   (let ((*board* (make-board)))
     ;; Import the board.
     (let ((vector (apply #'concatenate 'vector sequences)))
