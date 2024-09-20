@@ -64,7 +64,7 @@
   (listp value))
 
 (defun assignedp (value)
-  "Return true if cell value VALUE is assigned."
+  "Return true if cell value VALUE is assigned (given)."
   (integerp value))
 
 (defun eliminate (mark row-index column-index)
