@@ -208,7 +208,6 @@
 
 (defmethod print-object ((root root) stream)
   "Print a ‘root’ object."
-  (declare (type root root))
   (print-unreadable-object (root stream :type t :identity t)
     (format stream "(~S ~S)" (rows root) (columns root))))
 
