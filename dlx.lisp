@@ -486,7 +486,7 @@ solutions.  Default is to search for a single solution.")
 (defun solve (matrix &key (maximum-number-of-solutions 1) (if-does-not-exist :error) raw)
   "Apply Knuth's Algorithm X to an exact cover problem.
 
-Argument MATRIX is the incident matrix of the exact cover problem
+Argument MATRIX is the incidence matrix of the exact cover problem
  where the rows represent the set of choices (a.k.a. possibilities
  or candidates) and the columns represent the set of constraints.
  Value is a matrix object.
@@ -503,7 +503,7 @@ If keyword argument RAW is true, the row indices in a solution are
  in ascending order.  Default is false.
 
 Return value is the list of found solutions.  Each solution is a
-list of row indices of the incident matrix.
+list of row indices of the incidence matrix.
 
 See also ‘make-matrix’.
 
@@ -525,15 +525,15 @@ Examples:
   (let ((s (first (solve a))))
     (format t \"Found a solution containing~%\")
     (dolist (i s)
-      (format t \" ~:R row with columns ~S~%\"
+      (format t \"~:R row with columns ~S~%\"
               (1+ i) (map-matrix-row #'column-name a i)))
     s))
  ⇒ (0 3 4)
 ;; And the terminal output is:
 Found a solution containing
- first row with columns (C E F)
- fourth row with columns (A D)
- fifth row with columns (B G)"
+first row with columns (C E F)
+fourth row with columns (A D)
+fifth row with columns (B G)"
   (check-type matrix root)
   (check-type maximum-number-of-solutions (or alexandria:positive-fixnum null))
   (check-type if-does-not-exist (member :error nil))
