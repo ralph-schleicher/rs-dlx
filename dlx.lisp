@@ -164,8 +164,9 @@
   (row nil :type (or null header))
   ;; The link to the column header.
   (column nil :type (or null header))
-  ;; The value of the element.
-  (value 1))
+  ;; The value of the element.  Default is the complement of the null
+  ;; element.  See the ‘root’ structure below.
+  (value t))
 
 (defun make-element (row column value)
   "Create a new ‘element’ object."
