@@ -212,29 +212,29 @@
   (print-unreadable-object (root stream :type t :identity t)
     (format stream "(~S ~S)" (rows root) (columns root))))
 
-(defsubst row-index-type (root)
+(defun row-index-type (root)
   "Return the type specifier for a valid row index."
   (declare (type root root))
   `(integer 0 (,(rows root))))
 
-(defsubst column-index-type (root)
+(defun column-index-type (root)
   "Return the type specifier for a valid column index."
   (declare (type root root))
   `(integer 0 (,(columns root))))
 
-(defsubst element-type-p (object root)
+(defun element-type-p (object root)
   "Return true if OBJECT is a valid element."
   (declare (type root root))
   (typep object (element-type root)))
 
-(defsubst null-element-p (object root)
+(defun null-element-p (object root)
   "Return true if OBJECT is a null element."
   (declare (type root root))
   (if (numberp (null-element root))
       (and (numberp object) (= (null-element root) object))
     (funcall (test root) (null-element root) object)))
 
-(defsubst not-null-element (root)
+(defun not-null-element (root)
   "Return the complement of the null element."
   (declare (type root root))
   (if (numberp (null-element root))
@@ -265,7 +265,7 @@ Signal a ‘program-error’ if the column does not exist."
         (when (= (index header) index)
           (return header))))
 
-(defsubst remove-row (header)
+(defun remove-row (header)
   "Remove the matrix row designated by HEADER.
 Update the size of affected columns but not the root object
 or any row header."
@@ -277,7 +277,7 @@ or any row header."
         (column-remove-node node))
   (column-remove-node header))
 
-(defsubst remove-column (header)
+(defun remove-column (header)
   "Remove the matrix column designated by HEADER.
 Update the size of affected rows but not the root object
 or any column header."
