@@ -36,7 +36,7 @@
 (in-package :common-lisp-user)
 
 (defpackage #:de.ralph-schleicher.dlx
-  (:nicknames :rs-dlx :dlx)
+  (:nicknames :rs-dlx)
   (:use :common-lisp
 	:iterate)
   (:shadow #:search)
