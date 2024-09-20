@@ -79,7 +79,7 @@
           (setf (aref *board* row column-index) (delete mark value))))
   ())
 
-(defvar name-package (find-package :rs-sudoku)
+(defvar name-package (find-package :rs-dlx-sudoku)
   "The home package for row and column names.")
 
 (defun encode-name (row column number &optional raw)
