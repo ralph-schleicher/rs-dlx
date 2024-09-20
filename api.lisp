@@ -146,24 +146,24 @@ Exceptional Situations:
   (check-type matrix root)
   (check-type row-index fixnum)
   (check-type column-index fixnum)
-  (let ((row-header (row-header matrix row-index)))
-    (when (plusp (size row-header))
-      (let ((column-header (column-header matrix column-index)))
-        (when (plusp (size column-header))
-          ;; There may be a matching element
-          (if (< (size row-header) (size column-header))
-              ;; Search in row.
-              (iter (with node = row-header)
-                    (setf node (right node))
-                    (until (eq node row-header))
-                    (when (eq (column node) column-header)
-                      (return-from matrix-element (value node))))
-            ;; Search in column.
-            (iter (with node = column-header)
-                  (setf node (down node))
-                  (until (eq node column-header))
-                  (when (eq (row node) row-header)
-                    (return-from matrix-element (value node)))))))))
+  (let ((row-header (row-header matrix row-index))
+        (column-header (column-header matrix column-index)))
+    (when (and (plusp (size row-header))
+               (plusp (size column-header)))
+      ;; There may be a matching element
+      (if (< (size row-header) (size column-header))
+          ;; Search in row.
+          (iter (with node = row-header)
+                (setf node (right node))
+                (until (eq node row-header))
+                (when (eq (column node) column-header)
+                  (return-from matrix-element (value node))))
+        ;; Search in column.
+        (iter (with node = column-header)
+              (setf node (down node))
+              (until (eq node column-header))
+              (when (eq (row node) row-header)
+                (return-from matrix-element (value node)))))))
   ;; Element does not exist.
   (null-element matrix))
 
