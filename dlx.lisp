@@ -314,7 +314,11 @@ solutions.  Default is to search for a single solution.")
 (declaim (type (or fixnum null) *solution-count-limit*))
 
 (defvar *search-tree* ()
-  "The complete search tree.")
+  "The complete search tree.
+
+Value is an alist with cons cells of the form ‘(ITEM . ALIST)’ where
+ITEM is an element of the search path and ALIST is a subsequent search
+tree.  If ALIST is ‘nil’, the cell is a leaf node.")
 (declaim (type list *search-tree*))
 
 (defvar *search-tree-p* nil
@@ -340,6 +344,24 @@ solutions.  Default is to search for a single solution.")
 (defsubst non-empty-solution-p ()
   "Return true if the current search path is not empty."
   (plusp (length *solution*))) ;(not (null *solution*))
+
+(defun tree-from-path (path)
+  "Convert a search path into a search tree."
+  (when (consp path)
+    (list (cons (first path) (tree-from-path (rest path))))))
+
+(defun merge-search-path (path tree)
+  "Merge a search path into a search tree."
+  (when (not (null path))
+    (let ((cell (assoc (first path) tree)))
+      (if (null cell)
+          (setf tree (merge 'list (tree-from-path path) tree #'< :key #'car))
+        (setf (cdr cell) (merge-search-path (rest path) (cdr cell))))))
+  tree)
+
+(defun add-search-path (path)
+  "Add a search path to the ‘*search-tree*’ special variable."
+  (setf *search-tree* (merge-search-path path *search-tree*)))
 
 (defmacro with-tracing (&body body)
   "Mark analysis code."
@@ -450,12 +472,17 @@ solutions.  Default is to search for a single solution.")
           (format *trace-output* "Found solution ~S~%" *solution*))
         (when (or (null *solution-count-limit*) (< *solution-count* *solution-count-limit*))
           (push (copy-solution) *solutions*)
-          (incf *solution-count*)))
+          (incf *solution-count*))
+        (when *search-tree-p*
+          (add-search-path (copy-solution))))
     (let ((c (choose-column h)))
       (if (eq (down c) c)
-          ;; The body of the algorithm (see below) is a no-op.
-          (with-tracing
-            (format *trace-output* "No solution~%"))
+          (progn
+            ;; The body of the algorithm (see below) is a no-op.
+            (with-tracing
+              (format *trace-output* "No solution~%"))
+            (when (and *search-tree-p* (non-empty-solution-p))
+              (add-search-path (copy-solution))))
         (progn
           (cover-column c)
           (iter (with r = c)
@@ -483,7 +510,7 @@ solutions.  Default is to search for a single solution.")
                         (uncover-column (column j)))))
           (uncover-column c))))))
 
-(defun solve (matrix &key (maximum-number-of-solutions 1) (if-does-not-exist :error) raw)
+(defun solve (matrix &key (maximum-number-of-solutions 1) (if-does-not-exist :error) raw search-tree)
   "Apply Knuth's Algorithm X to an exact cover problem.
 
 Argument MATRIX is the incidence matrix of the exact cover problem
@@ -501,9 +528,12 @@ Keyword argument IF-DOES-NOT-EXIST specifies the action to be taken
 If keyword argument RAW is true, the row indices in a solution are
  in the order as they have been found.  Otherwise, they are sorted
  in ascending order.  Default is false.
+If keyword argument SEARCH-TREE is true, build the complete search
+ tree and return it as the secondary value.
 
 Return value is the list of found solutions.  Each solution is a
-list of row indices of the incidence matrix.
+list of row indices of the incidence matrix.  Secondary value is
+the search tree.
 
 See also ‘make-matrix’.
 
@@ -542,7 +572,7 @@ fifth row with columns (B G)"
         (*solution-count* 0)
         (*solution-count-limit* maximum-number-of-solutions)
         (*search-tree* ())
-        (*search-tree-p* nil))
+        (*search-tree-p* (not (null search-tree))))
     (search matrix 0)
     ;; Process the solutions.
     (when (and (null *solutions*) (eq if-does-not-exist :error))
