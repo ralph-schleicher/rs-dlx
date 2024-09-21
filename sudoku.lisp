@@ -279,10 +279,10 @@ which is one possible solution of the Sudoku puzzle."
                         (push (encode-name row column value) possibilities)
                       (iter (for number :in value)
                             (push (encode-name row column number) possibilities)))))
-        (dlx:remove-matrix-rows-by-name matrix (set-difference all-possibilities possibilities)))
-      (iter (for index :in (first (time (dlx:solve matrix))))
+        (rs-dlx:remove-matrix-rows-by-name matrix (set-difference all-possibilities possibilities)))
+      (iter (for index :in (first (time (rs-dlx:solve matrix))))
             (multiple-value-bind (row column number)
-                (decode-name (dlx:row-name matrix index))
+                (decode-name (rs-dlx:row-name matrix index))
               ;; Check actual solution with initial possibilities.
               (for value = (aref *board* row column))
               (if (if (assignedp value)
