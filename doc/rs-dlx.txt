@@ -129,17 +129,6 @@ column-name (object &optional index)
 make-matrix (rows columns &key element-type null-element)
    Create a new matrix object.
 
-   A matrix object is a sparse matrix based on circular doubly linked
-   lists as described in Knuth's “Dancing Links” paper.  The matrix
-   elements are addressed by a zero-based row and column index.  Any
-   index has to be a valid array index.  All matrix elements are set
-   to the null element initially.  You can read or update a matrix
-   element with the ‘matrix-element’ function.  A more efficient way
-   to fill a matrix is to create an empty matrix with either zero
-   rows or zero columns, then use the ‘add-matrix-row’ function or
-   ‘add-matrix-column’ function respectively to define the non-null
-   elements.
-
    First argument ROWS is the number of matrix rows.  Value has to
     be a non-negative integer.
    Second argument COLUMNS is the number of matrix columns.  Value
@@ -153,6 +142,17 @@ make-matrix (rows columns &key element-type null-element)
     Otherwise, the default is ‘nil’.
 
    Value is a matrix object.
+
+   A matrix object is a sparse matrix based on circular doubly linked
+   lists as described in Knuth's “Dancing Links” paper.  The matrix
+   elements are addressed by a zero-based row and column index.  Any
+   index has to be a valid array index.  All matrix elements are set
+   to the null element initially.  You can read or update a matrix
+   element with the ‘matrix-element’ function.  A more efficient way
+   to fill a matrix is to create an empty matrix with either zero
+   rows or zero columns, then use the ‘add-matrix-row’ function or
+   ‘add-matrix-column’ function respectively to define the non-null
+   elements.
 
    See also ‘matrix-rows’, ‘matrix-columns’, ‘matrix-element’,
    ‘matrix-elements’, ‘add-matrix-row’, ‘add-matrix-column’,
@@ -455,10 +455,11 @@ row-name (object &optional index)
    remaining matrix rows are set to ‘nil’.
 
                                                                       [Function]
-solve (matrix &key maximum-number-of-solutions if-does-not-exist raw)
+solve (matrix &key maximum-number-of-solutions if-does-not-exist raw
+       search-tree)
    Apply Knuth's Algorithm X to an exact cover problem.
 
-   Argument MATRIX is the incident matrix of the exact cover problem
+   Argument MATRIX is the incidence matrix of the exact cover problem
     where the rows represent the set of choices (a.k.a. possibilities
     or candidates) and the columns represent the set of constraints.
     Value is a matrix object.
@@ -473,9 +474,12 @@ solve (matrix &key maximum-number-of-solutions if-does-not-exist raw)
    If keyword argument RAW is true, the row indices in a solution are
     in the order as they have been found.  Otherwise, they are sorted
     in ascending order.  Default is false.
+   If keyword argument SEARCH-TREE is true, build the complete search
+    tree and return it as the secondary value.
 
    Return value is the list of found solutions.  Each solution is a
-   list of row indices of the incident matrix.
+   list of row indices of the incidence matrix.  Secondary value is
+   the search tree.
 
    See also ‘make-matrix’.
 
@@ -497,12 +501,12 @@ solve (matrix &key maximum-number-of-solutions if-does-not-exist raw)
      (let ((s (first (solve a))))
        (format t "Found a solution containing~%")
        (dolist (i s)
-         (format t " ~:R row with columns ~S~%"
+         (format t "~:R row with columns ~S~%"
                  (1+ i) (map-matrix-row #'column-name a i)))
        s))
     ⇒ (0 3 4)
    ;; And the terminal output is:
    Found a solution containing
-    first row with columns (C E F)
-    fourth row with columns (A D)
-    fifth row with columns (B G)
+   first row with columns (C E F)
+   fourth row with columns (A D)
+   fifth row with columns (B G)
