@@ -50,33 +50,36 @@
   "Create a new Sudoku board."
   (make-array '(9 9) :initial-element ()))
 
-(defun print-board (&optional (board *board*) (stream *standard-output*))
-  "Print a Sudoku board."
-  (prin1 board stream)
-  (fresh-line stream))
-
 (defun make-marks ()
   "Create a fresh list of pencil marks."
   (list 1 2 3 4 5 6 7 8 9))
 
-(defun unassignedp (value)
-  "Return true if cell value VALUE is unassigned."
+(defun not-given-p (value)
+  "Return true if cell value VALUE is not given."
   (listp value))
 
-(defun assignedp (value)
-  "Return true if cell value VALUE is assigned (given)."
+(defun givenp (value)
+  "Return true if cell value VALUE is given."
   (integerp value))
 
 (defun eliminate (mark row-index column-index)
   "Remove pencil mark MARK from all cells in ROW-INDEX and COLUMN-INDEX."
   (iter (for column :from 0 :below 9)
         (for value = (aref *board* row-index column))
-        (when (unassignedp value)
+        (when (not-given-p value)
           (setf (aref *board* row-index column) (delete mark value))))
   (iter (for row :from 0 :below 9)
         (for value = (aref *board* row column-index))
-        (when (unassignedp value)
+        (when (not-given-p value)
           (setf (aref *board* row column-index) (delete mark value))))
+  ;; Likewise for the cell's block.
+  (let ((start-row (* (truncate row-index 3) 3))
+        (start-column (* (truncate column-index 3) 3)))
+    (iter (for row :from start-row :below (+ start-row 3))
+          (iter (for column :from start-column :below (+ start-column 3))
+                (for value = (aref *board* row column))
+                (when (not-given-p value)
+                  (setf (aref *board* row column) (delete mark value))))))
   ())
 
 (defvar name-package (find-package :rs-dlx-sudoku)
@@ -112,16 +115,6 @@ Return the row index, column index, and number as multiple values."
         (decf column))
       (values row column number))))
 
-(defvar board-possibilities
-  (let ((board (make-board)))
-    (iter (for row :from 0 :below 9)
-          (iter (for column :from 0 :below 9)
-                (setf (aref board row column)
-                      (iter (for number :from 1 :to 9)
-                            (collect (encode-name row column number))))))
-    board)
-  "A Sudoku board with all possibilities per cell.")
-
 (defvar all-possibilities
   (let (result)
     (iter (for row :from 1 :to 9)
@@ -131,7 +124,7 @@ Return the row index, column index, and number as multiple values."
     (nreverse result))
   "A flat list of all possibilities.")
 
-(defvar *sudoku-matrix-elements* ()
+(defvar sudoku-matrix-elements ()
   "A list of non-null incidence matrix elements for Sudoku.
 List elements are cons cells of the form ‘(ROW . COLUMNS)’ where ROW
 is a row name and COLUMNS is a list of column indices of all non-null
@@ -143,16 +136,17 @@ Argument A is a 729×324 null matrix."
   (unless (and (= (rs-dlx:matrix-rows a) 729)
                (= (rs-dlx:matrix-columns a) 324))
     (error 'program-error))
-  (let ((e (make-array '(9 9) :element-type 'bit
-                              :initial-contents '((1 0 0 0 0 0 0 0 0)
-                                                  (0 1 0 0 0 0 0 0 0)
-                                                  (0 0 1 0 0 0 0 0 0)
-                                                  (0 0 0 1 0 0 0 0 0)
-                                                  (0 0 0 0 1 0 0 0 0)
-                                                  (0 0 0 0 0 1 0 0 0)
-                                                  (0 0 0 0 0 0 1 0 0)
-                                                  (0 0 0 0 0 0 0 1 0)
-                                                  (0 0 0 0 0 0 0 0 1))))
+  (let ((e (make-array '(9 9)
+                       :element-type 'bit
+                       :initial-contents '((1 0 0 0 0 0 0 0 0)
+                                           (0 1 0 0 0 0 0 0 0)
+                                           (0 0 1 0 0 0 0 0 0)
+                                           (0 0 0 1 0 0 0 0 0)
+                                           (0 0 0 0 1 0 0 0 0)
+                                           (0 0 0 0 0 1 0 0 0)
+                                           (0 0 0 0 0 0 1 0 0)
+                                           (0 0 0 0 0 0 0 1 0)
+                                           (0 0 0 0 0 0 0 0 1))))
         (i 0)
         (j 0))
     ;; Reset the row names.
@@ -209,22 +203,21 @@ Argument A is a 729×324 null matrix."
         (n (* 9 9 4)) ;324
         ;; The matrix.
         (a nil))
-    ;; Constraints.
-    (cond ((null *sudoku-matrix-elements*)
+    (cond ((null sudoku-matrix-elements)
            (setf a (initialize-sudoku-matrix (rs-dlx:make-matrix m n)))
            ;; Update cache.
            (iter (for i :from 0 :below m)
                  ;; See call of ‘rs-dlx:add-matrix-row’ below.
                  (push (cons (rs-dlx:row-name a i)
                              (rs-dlx:map-matrix-row #'rs-dlx:column-index a i))
-                       *sudoku-matrix-elements*))
-           (setf *sudoku-matrix-elements* (nreverse *sudoku-matrix-elements*)))
+                       sudoku-matrix-elements))
+           (setf sudoku-matrix-elements (nreverse sudoku-matrix-elements)))
           (t
            ;; Load from cache.
            (setf a (rs-dlx:make-matrix 0 n))
            (mapc (lambda (cell)
                    (rs-dlx:add-matrix-row a (cdr cell) :name (car cell)))
-                 *sudoku-matrix-elements*)))
+                 sudoku-matrix-elements)))
     ;; Return value.
     a))
 
@@ -235,7 +228,7 @@ Arguments are sequences of numbers in the range from 1 to 9 inclusive
  or characters in the range from ‘1’ to ‘9’ inclusive.  All sequences
  are rearranged to a 9×9 matrix in row major layout.  The number 0,
  the symbol ‘nil’, the space character ‘ ’, and the character
- ‘.’ (period) represent missing numbers.
+ ‘.’ (period) represent non-given numbers.
 
 Value is a 9×9 array of integers in the range from 1 to 9 inclusive
 which is one possible solution of the Sudoku puzzle."
@@ -265,17 +258,15 @@ which is one possible solution of the Sudoku puzzle."
     (iter (for row :from 0 :below 9)
           (iter (for column :from 0 :below 9)
                 (for value = (aref *board* row column))
-                (when (assignedp value)
+                (when (givenp value)
                   (eliminate value row column))))
-    (rs-dlx::with-tracing
-      (print-board *board* *trace-output*))
     ;; Solve the board.
     (let ((matrix (make-sudoku-matrix)) failure)
       (let (possibilities)
         (iter (for row :from 0 :below 9)
               (iter (for column :from 0 :below 9)
                     (for value = (aref *board* row column))
-                    (if (assignedp value)
+                    (if (givenp value)
                         (push (encode-name row column value) possibilities)
                       (iter (for number :in value)
                             (push (encode-name row column number) possibilities)))))
@@ -285,13 +276,12 @@ which is one possible solution of the Sudoku puzzle."
                 (decode-name (rs-dlx:row-name matrix index))
               ;; Check actual solution with initial possibilities.
               (for value = (aref *board* row column))
-              (if (if (assignedp value)
+              (if (if (givenp value)
                       (= number value)
                     (member number value))
                   (setf (aref *board* row column) number)
                 (progn
-                  (rs-dlx::with-tracing
-                    (format *trace-output* "Error in cell (~A ~A), solver found ~A but should be ~S.~%" row column number value))
+                  (format *trace-output* "Error in cell (~A ~A), solver found ~A but should be ~S.~%" row column number value)
                   (setf failure t)))))
       (unless failure *board*))))
 
