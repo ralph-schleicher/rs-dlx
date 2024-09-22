@@ -115,28 +115,10 @@ Return the row index, column index, and number as multiple values."
         (decf column))
       (values row column number))))
 
-(defvar all-possibilities
-  (let (result)
-    (iter (for row :from 1 :to 9)
-          (iter (for column :from 1 :to 9)
-                (iter (for number :from 1 :to 9)
-                      (push (encode-name row column number t) result))))
-    (nreverse result))
-  "A flat list of all possibilities.")
-
-(defvar sudoku-matrix-elements ()
-  "A list of non-null incidence matrix elements for Sudoku.
-List elements are cons cells of the form ‘(ROW . COLUMNS)’ where ROW
-is a row name and COLUMNS is a list of column indices of all non-null
-matrix elements of this row.")
-
-(defun initialize-sudoku-matrix (a)
-  "Fill in the incidence matrix A from scratch.
-Argument A is a 729×324 null matrix."
-  (unless (and (= (rs-dlx:matrix-rows a) 729)
-               (= (rs-dlx:matrix-columns a) 324))
-    (error 'program-error))
-  (let ((e (make-array '(9 9)
+(defun make-sudoku-matrix ()
+  "Return the full incidence matrix for Sudoku."
+  (let ((a (rs-dlx:make-matrix (* 9 9 9) (* 9 9 4))) ;729×324
+        (e (make-array '(9 9)
                        :element-type 'bit
                        :initial-contents '((1 0 0 0 0 0 0 0 0)
                                            (0 1 0 0 0 0 0 0 0)
@@ -149,8 +131,13 @@ Argument A is a 729×324 null matrix."
                                            (0 0 0 0 0 0 0 0 1))))
         (i 0)
         (j 0))
-    ;; Reset the row names.
-    (setf (rs-dlx:row-names a) all-possibilities)
+    ;; Possibilities.
+    (setf (rs-dlx:row-names a) (let (result)
+                                 (iter (for row :from 1 :to 9)
+                                       (iter (for column :from 1 :to 9)
+                                             (iter (for number :from 1 :to 9)
+                                                   (push (encode-name row column number t) result))))
+                                 (nreverse result)))
     ;; Cell constraints.  All possible numbers for a cell.
     ;;
     ;; R1C1 = {R1C1N1, R1C1N2, R1C1N3, R1C1N4, R1C1N5, R1C1N6, R1C1N7, R1C1N8, R1C1N9}
@@ -197,29 +184,16 @@ Argument A is a 729×324 null matrix."
     ;; Return value.
     a))
 
-(defun make-sudoku-matrix ()
-  "Create a new incidence matrix for Sudoku."
-  (let ((m (* 9 9 9)) ;729
-        (n (* 9 9 4)) ;324
-        ;; The matrix.
-        (a nil))
-    (cond ((null sudoku-matrix-elements)
-           (setf a (initialize-sudoku-matrix (rs-dlx:make-matrix m n)))
-           ;; Update cache.
-           (iter (for i :from 0 :below m)
-                 ;; See call of ‘rs-dlx:add-matrix-row’ below.
-                 (push (cons (rs-dlx:row-name a i)
-                             (rs-dlx:map-matrix-row #'rs-dlx:column-index a i))
-                       sudoku-matrix-elements))
-           (setf sudoku-matrix-elements (nreverse sudoku-matrix-elements)))
-          (t
-           ;; Load from cache.
-           (setf a (rs-dlx:make-matrix 0 n))
-           (mapc (lambda (cell)
-                   (rs-dlx:add-matrix-row a (cdr cell) :name (car cell)))
-                 sudoku-matrix-elements)))
-    ;; Return value.
-    a))
+(defvar sudoku-matrix-elements
+  (let ((a (make-sudoku-matrix)))
+    (iter (for i :from 0 :below (rs-dlx:matrix-rows a))
+          ;; See call of ‘rs-dlx:add-matrix-row’ below.
+          (collect (cons (rs-dlx:row-name a i)
+                         (rs-dlx:map-matrix-row #'rs-dlx:column-index a i)))))
+  "A list of non-null incidence matrix elements for Sudoku.
+List elements are cons cells of the form ‘(ROW . COLUMNS)’ where ROW
+is a row name and COLUMNS is a list of column indices of all non-null
+matrix elements of this row.")
 
 (defun solve (&rest sequences)
   "Solve a Sudoku puzzle.
@@ -261,16 +235,14 @@ which is one possible solution of the Sudoku puzzle."
                 (when (givenp value)
                   (eliminate value row column))))
     ;; Solve the board.
-    (let ((matrix (make-sudoku-matrix)) failure)
-      (let (possibilities)
-        (iter (for row :from 0 :below 9)
-              (iter (for column :from 0 :below 9)
-                    (for value = (aref *board* row column))
-                    (if (givenp value)
-                        (push (encode-name row column value) possibilities)
-                      (iter (for number :in value)
-                            (push (encode-name row column number) possibilities)))))
-        (rs-dlx:remove-matrix-rows-by-name matrix (set-difference all-possibilities possibilities)))
+    (let ((matrix (rs-dlx:make-matrix 0 324)) failure)
+      (iter (for row :from 0 :below 9)
+            (iter (for column :from 0 :below 9)
+                  (for value = (aref *board* row column))
+                  (iter (for number :in (if (givenp value) (list value) value))
+                        (for name = (encode-name row column number))
+                        (for cell = (assoc name sudoku-matrix-elements))
+                        (rs-dlx:add-matrix-row matrix (cdr cell) :name name))))
       (iter (for index :in (first (time (rs-dlx:solve matrix))))
             (multiple-value-bind (row column number)
                 (decode-name (rs-dlx:row-name matrix index))
