@@ -103,6 +103,18 @@
                 (assert-true (= (aref a i j) (matrix-element b i j)) a b)))
     ()))
 
+(define-test knuth
+  (let ((a (matrix-from-array #2A((0 0 1 0 1 1 0)
+                                  (1 0 0 1 0 0 1)
+                                  (0 1 1 0 0 1 0)
+                                  (1 0 0 1 0 0 0)
+                                  (0 1 0 0 0 0 1)
+                                  (0 0 0 1 1 0 1)))))
+    (multiple-value-bind (solutions search-tree)
+        (solve a :maximum-number-of-solutions nil :search-tree t)
+      (assert-equal solutions '((0 3 4)))
+      (assert-equal search-tree '((1 (2)) (3 (0 (4))))))))
+
 (defun main (&optional (tests :all))
   (let ((lisp-unit:*print-errors* t)
 	(lisp-unit:*print-failures* t)
