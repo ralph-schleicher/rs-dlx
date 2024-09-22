@@ -38,17 +38,6 @@
 (defun make-matrix (rows columns &key (element-type 'bit) (null-element nil null-element-supplied-p))
   "Create a new matrix object.
 
-A matrix object is a sparse matrix based on circular doubly linked
-lists as described in Knuth's “Dancing Links” paper.  The matrix
-elements are addressed by a zero-based row and column index.  Any
-index has to be a valid array index.  All matrix elements are set
-to the null element initially.  You can read or update a matrix
-element with the ‘matrix-element’ function.  A more efficient way
-to fill a matrix is to create an empty matrix with either zero
-rows or zero columns, then use the ‘add-matrix-row’ function or
-‘add-matrix-column’ function respectively to define the non-null
-elements.
-
 First argument ROWS is the number of matrix rows.  Value has to
  be a non-negative integer.
 Second argument COLUMNS is the number of matrix columns.  Value
@@ -62,6 +51,17 @@ Keyword argument NULL-ELEMENT is the value of a null element.
  Otherwise, the default is ‘nil’.
 
 Value is a matrix object.
+
+A matrix object is a sparse matrix based on circular doubly linked
+lists as described in Knuth's “Dancing Links” paper.  The matrix
+elements are addressed by a zero-based row and column index.  Any
+index has to be a valid array index.  All matrix elements are set
+to the null element initially.  You can read or update a matrix
+element with the ‘matrix-element’ function.  A more efficient way
+to fill a matrix is to create an empty matrix with either zero
+rows or zero columns, then use the ‘add-matrix-row’ function or
+‘add-matrix-column’ function respectively to define the non-null
+elements.
 
 See also ‘matrix-rows’, ‘matrix-columns’, ‘matrix-element’,
 ‘matrix-elements’, ‘add-matrix-row’, ‘add-matrix-column’,
